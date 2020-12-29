@@ -25,16 +25,54 @@ con.connect(function(err){
                     if(err) throw err;
                     console.log(result)
                     res.status(200).send('New User added');
-                
                 })
-                
             } catch (error) {
                 res.send(error)
             }
         })
     });
 
-    
+    router.post('/sign-in', function(req,res){
+        try {
+
+            con.query(`SELECT * FROM customer WHERE email = '${req.body.email}'`,function(err, result){
+                
+                if(result.length == 0) {
+                    console.log(result)
+                    res.send("Sorry, we don't know this user")
+
+                } else {
+                    console.log(req.body)
+                    bcrypt.compare(req.body.password, result[0].password, function(err,resulta){
+                        if(resulta) {
+                            let token = jwt.sign({id : result[0].id, lastname: result[0].name, firstname: result[0].firstname}, config.secret, {expiresIn: 86400});
+                            console.log(token)
+                            res.status(200).send({ token: token });
+                        } else {
+                            res.send("Sorry, we don't know this user")
+                        }
+                     }) 
+                }
+            })
+            
+        } catch (error) {
+            res.status(400).send(error);  
+        }
+    });
+
+    router.get('/customer', function(req,res){
+
+        try {
+            
+            con.query(`SELECT id_customer, lastname, firstname  FROM customer`, function(err,result){
+                if(err) throw err;
+                console.log(result[0])
+                res.status(200).send(result[0])
+            })
+        } catch (error) {
+            res.status(400).send(error);  
+        }
+    })
 
 
 
